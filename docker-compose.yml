@@ -13,7 +13,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend/foodgram/
+    build: ./backend/
     depends_on:
       - db
     env_file: .env
@@ -40,4 +40,5 @@ services:
     depends_on:
       - frontend
       - backend
+
     
