@@ -57,7 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
         new_password = serializer.validated_data.get('new_password')
         current_password = serializer.validated_data.get('current_password')
         if not user.check_password(current_password):
-            return Response (
+            return Response(
                 'Неверный пароль',
                 status=400
             )
@@ -117,7 +117,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
-    http_method_names = ['get', 'post', 'patch', 'delete',]
+    http_method_names = ['get', 'post', 'patch', 'delete']
     filterset_class = RecipesFilters
 
     def get_serializer_class(self):

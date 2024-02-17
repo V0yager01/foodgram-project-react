@@ -7,6 +7,7 @@ from .validators import validate_me
 
 class User(AbstractUser):
     """Модель юзера."""
+
     email = models.EmailField(max_length=256,
                               verbose_name='email')
     username = models.CharField(max_length=256,
@@ -21,7 +22,8 @@ class User(AbstractUser):
 
 
 class Subscribe(models.Model):
-    "Модель подписок"
+    """Модель подписок."""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name='user')
     author = models.ForeignKey(User, on_delete=models.CASCADE,

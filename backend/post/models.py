@@ -25,7 +25,8 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Ingredient model"""
+    """Ingredient model."""
+
     name = models.CharField(max_length=256,
                             blank=False,
                             verbose_name='Name')
@@ -38,6 +39,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """Модель рецептов."""
+
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
                                verbose_name='Author',
@@ -63,20 +65,21 @@ class Recipe(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} - {self.author}"
-   
+
     class Meta:
         ordering = ('-pub_date',)
 
 
 class RecipeToIngredient(models.Model):
     """Промежуточная таблица между рецептом и ингредиентом."""
+
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,
                                related_name='recipe_ingredients')
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE,
                                    related_name='ingredient_recipes')
     amount = models.IntegerField(verbose_name='amount',
                                  blank=False)
-    
+
 
 class Favorite(models.Model):
     """Favorite."""

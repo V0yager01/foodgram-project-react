@@ -1,6 +1,3 @@
-import base64
-
-from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
@@ -102,7 +99,7 @@ class RecipeGetListSerializer(serializers.ModelSerializer):
                   'cooking_time',
                   'is_in_shopping_cart')
 
-    def get_is_favorited(self, obj):    
+    def get_is_favorited(self, obj): 
         if (self.context["request"].user.is_authenticated and
             Favorite.objects.filter(user=self.context["request"].user,
                                     recipe=obj).exists()):
@@ -176,22 +173,22 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.Serializer):
     def validate(self, data):
         if not Recipe.objects.filter(id=self.context['pk']).exists():
-                raise serializers.ValidationError({"errors":
-                                                   "Recipe do not exists"})
+            raise serializers.ValidationError({"errors":
+                                               "Recipe do not exists"})
 
         if (self.context['request'].method == 'POST' and
-            (Favorite
-             .objects
-             .filter(user=self.context['request'].user,
-                     recipe=self.context['pk']).exists())):
-                raise serializers.ValidationError({"errors":
-                                                   "Recipe is favorite"})
+                (Favorite
+                 .objects
+                 .filter(user=self.context['request'].user,
+                         recipe=self.context['pk']).exists())):
+            raise serializers.ValidationError({"errors":
+                                               "Recipe is favorite"})
 
         if (self.context['request'].method == 'DELETE' and
             (not Favorite.objects.filter(user=self.context['request'].user,
                                          recipe=self.context['pk']).exists())):
-                raise serializers.ValidationError({"errors":
-                                                   "Recipe is not favorite"})
+            raise serializers.ValidationError({"errors":
+                                               "Recipe is not favorite"})
         return data
 
     def create(self, validated_data):
@@ -227,7 +224,7 @@ class SubscriceListSerializer(serializers.ModelSerializer):
         return obj.author.filter(user=user).exists()
 
     def get_recipes(self, obj):
-        request = self.context.get('request') 
+        request = self.context.get('request')
         limit = request.query_params.get('recipes_limit')
         if limit is None:
             recipes = obj.recipes.all()
