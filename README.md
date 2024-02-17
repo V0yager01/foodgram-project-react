@@ -43,7 +43,7 @@ ALLOWED_HOSTS = '127.0.0.1'
 sudo docker compose up -f docker-compose.production.yml up -d
 ```
 ### Подготовка Django
-Выполните миграцию проекта и загрузите статику бэкенда.
+Выполням миграцию и загружаем статику бэкенда.
 ```
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
