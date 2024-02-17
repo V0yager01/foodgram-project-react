@@ -30,7 +30,7 @@ services:
         - backend
   
   gateway:
-    image: v0yager1/foodgram_gateway
+    build: v0yager1/foodgram_gateway
     env_file: .env
     volumes:
       - static:/static/
@@ -40,4 +40,5 @@ services:
     depends_on:
       - frontend
       - backend
+
     

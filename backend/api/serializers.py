@@ -227,7 +227,7 @@ class SubscriceListSerializer(serializers.ModelSerializer):
         return obj.author.filter(user=user).exists()
 
     def get_recipes(self, obj):
-        request = self.context.get('request')   
+        request = self.context.get('request') 
         limit = request.query_params.get('recipes_limit')
         if limit is None:
             recipes = obj.recipes.all()
