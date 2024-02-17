@@ -12,6 +12,7 @@ class IngedientNameFilter(rest_framework.FilterSet):
         model = Ingredient
         fields = ('name', )
 
+
 class RecipesFilters(rest_framework.FilterSet):
     author = rest_framework.ModelChoiceFilter(
         field_name='author',

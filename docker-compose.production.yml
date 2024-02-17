@@ -30,7 +30,7 @@ services:
         - backend
   
   gateway:
-    image: v0yager1/kittygram_gateway
+    image: v0yager1/foodgram_gateway
     env_file: .env
     volumes:
       - static:/static/

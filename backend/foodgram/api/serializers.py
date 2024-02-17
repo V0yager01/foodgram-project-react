@@ -62,12 +62,14 @@ class TagSerializer(serializers.ModelSerializer):
 
 class BaseRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=True, allow_null=False)
+
     class Meta:
         model = Recipe
         fields = ('id',
                   'name',
                   'image',
                   'cooking_time')
+
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,6 +88,7 @@ class RecipeToIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("id", "name", "measurement_unit", "amount")
         model = RecipeToIngredient
+
 
 class RecipeGetListSerializer(serializers.ModelSerializer):
     ingredients = RecipeToIngredientSerializer(many=True,
@@ -133,6 +136,7 @@ class AddIngredientToRecipe(serializers.ModelSerializer):
         fields = ('id',
                   'amount')
 
+
 class RecipesCreateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True,
                                               queryset=Tag.objects.all())
@@ -150,14 +154,14 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         for ingredient in ingredients:
             amount = ingredient['amount']
-            ingredient_id = Ingredient.objects.get(id=ingredient['ingredient']['id'])
+            ingredient_id = (Ingredient
+                             .objects.get(id=ingredient['ingredient']['id']))
             RecipeToIngredient.objects.create(recipe=recipe,
                                               ingredient=ingredient_id,
                                               amount=amount)
@@ -191,7 +195,7 @@ class FavoriteSerializer(serializers.Serializer):
              .filter(user=self.context['request'].user,
                      recipe=self.context['pk']).exists())):
                 raise serializers.ValidationError({"errors":
-                                                   "Recipe is already favorite"})
+                                                   "Recipe is favorite"})
 
         if (self.context['request'].method == 'DELETE' and
             (not Favorite.objects.filter(user=self.context['request'].user,
@@ -260,14 +264,14 @@ class SubscribeSerializer(serializers.Serializer):
         if self.context['request'].method == "POST":
             if Subscribe.objects.filter(user=user, author=author).exists():
                 raise serializers.ValidationError({"errors":
-                                                   "You are already subscribe"})
+                                                   "You are already subs"})
         else:
             if not Subscribe.objects.filter(user=user, author=author).exists():
                 raise serializers.ValidationError({"errors":
-                                                   "You are already unsubscribe"})
+                                                   "You are already unsub"})
 
         return validated_data
-    
+
     def create(self, validated_data):
         user = self.context.get('request').user
         author = User.objects.get(id=self.context['id'])
