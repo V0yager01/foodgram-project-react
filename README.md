@@ -40,7 +40,18 @@ ALLOWED_HOSTS = '127.0.0.1'
 ### Запуск Docker compose 
 В директории проекта запускаем docker-compose.production.yml
 ```
-sudo docker compose up -f docker-compose.production.yml up
+sudo docker compose up -f docker-compose.production.yml up -d
+```
+### Подготовка Django
+Выполните миграцию проекта и загрузите статику бэкенда.
+```
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+```
+Также у вас есть возможно загрузить в базу готовый список продуктов.
+```
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py load_csv
 ```
 ## Конфигурационные файлы
 Во время разработки рекомендуется использовать <strong>docker-compose.yml</strong>, где образы билдятся при каждом запуске.
