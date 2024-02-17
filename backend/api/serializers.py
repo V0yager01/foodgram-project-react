@@ -99,17 +99,17 @@ class RecipeGetListSerializer(serializers.ModelSerializer):
                   'cooking_time',
                   'is_in_shopping_cart')
 
-    def get_is_favorited(self, obj): 
-        if (self.context["request"].user.is_authenticated and
-            Favorite.objects.filter(user=self.context["request"].user,
-                                    recipe=obj).exists()):
+    def get_is_favorited(self, obj):
+        if (self.context["request"].user.is_authenticated
+            and Favorite.objects.filter(user=self.context["request"].user,
+                                        recipe=obj).exists()):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        if (self.context["request"].user.is_authenticated and
-            ShopList.objects.filter(user=self.context["request"].user,
-                                    recipe=obj).exists()):
+        if (self.context["request"].user.is_authenticated
+            and ShopList.objects.filter(user=self.context["request"].user,
+                                        recipe=obj).exists()):
             return True
         return False
 
@@ -172,21 +172,23 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.Serializer):
     def validate(self, data):
-        if not Recipe.objects.filter(id=self.context['pk']).exists():
+        pk = self.context['pk']
+        request = self.context['request']
+        if not Recipe.objects.filter(id=pk).exists():
             raise serializers.ValidationError({"errors":
                                                "Recipe do not exists"})
 
-        if (self.context['request'].method == 'POST' and
-                (Favorite
-                 .objects
-                 .filter(user=self.context['request'].user,
-                         recipe=self.context['pk']).exists())):
+        if (request.method == 'POST'
+                and (Favorite
+                     .objects
+                     .filter(user=request.user,
+                             recipe=pk).exists())):
             raise serializers.ValidationError({"errors":
                                                "Recipe is favorite"})
 
-        if (self.context['request'].method == 'DELETE' and
-            (not Favorite.objects.filter(user=self.context['request'].user,
-                                         recipe=self.context['pk']).exists())):
+        if (request.method == 'DELETE'
+            and not Favorite.objects.filter(user=request.user,
+                                            recipe=pk).exists()):
             raise serializers.ValidationError({"errors":
                                                "Recipe is not favorite"})
         return data
