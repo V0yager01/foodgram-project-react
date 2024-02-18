@@ -1,21 +1,23 @@
 from django.db.models import Sum
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (IsAuthenticated)
 from rest_framework.response import Response
 
-from post.models import (Ingredient,
-                         Tag,
-                         Recipe,
-                         RecipeToIngredient,
-                         ShopList)
-from user.models import User
+from recipe.models import (Favorite,
+                           Ingredient,
+                           Tag,
+                           Recipe,
+                           RecipeToIngredient,
+                           ShopList)
+from user.models import User, Subscribe
 
 from .filters import IngedientNameFilter, RecipesFilters
 from .paginators import LimitPaginator
+from .permissions import PrivilegeOrReadOnly
 from .serializers import (ChangePasswordSerializer,
                           SignUpSerializer,
                           FavoriteSerializer,
@@ -67,19 +69,27 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=(['POST', 'DELETE']),
+        methods=(['POST']),
         serializer_class=SubscribeSerializer,
         permission_classes=[IsAuthenticated],
     )
     def subscribe(self, request, pk=None):
-        serializer = SubscribeSerializer(data=request.data,
-                                         context={
-                                             'request': request,
-                                             'id': pk
-                                         })
+        data = {'user': request.user.id,
+                'author': get_object_or_404(User, id=pk).id}
+        serializer = SubscribeSerializer(data=data,
+                                         context={'request':
+                                                  request})
         serializer.is_valid(raise_exception=True)
-        data = serializer.save()
-        return Response(data["message"], status=data["status"])
+        response = serializer.save()
+        return Response(response, status=204)
+
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, pk=None):
+        subscribe = get_object_or_404(Subscribe, user=request.user,
+                                      author_id=pk)
+        subscribe.delete()
+        return Response({'message': "Подписка удалена",
+                         'status': 204})
 
     @action(
         detail=False,
@@ -116,7 +126,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [PrivilegeOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete']
     filterset_class = RecipesFilters
 
@@ -137,35 +147,50 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=(['POST', 'DELETE']),
+        methods=(['POST']),
         serializer_class=FavoriteSerializer,
         permission_classes=[IsAuthenticated],
     )
     def favorite(self, request, pk=None):
-        serializer = FavoriteSerializer(data=request.data,
-                                        context={
-                                            "request": request,
-                                            "pk": pk
-                                        })
+        data = {'user': request.user.id,
+                'recipe': get_object_or_404(Recipe, id=pk).id}
+        serializer = FavoriteSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         data = serializer.save()
-        return Response(data["message"], status=data["status"])
+        return Response(data, status=201)
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk=None):
+        favorite = get_object_or_404(Favorite, user=request.user, recipe_id=pk)
+        favorite.delete()
+        return Response({'message': "Рецепт успешно удален из избранного"},
+                        status=204)
 
     @action(
-        methods=(['DELETE', 'POST']),
+        methods=(['POST']),
         permission_classes=(IsAuthenticated,),
         serializer_class=ShopListSerializer,
         detail=True,
     )
     def shopping_cart(self, request, pk=None):
-        serializer = ShopListSerializer(data=request.data,
+        recipe = get_object_or_404(Recipe, id=pk)
+        data = {'user': request.user.id,
+                'recipe': recipe.id}
+        serializer = ShopListSerializer(data=data,
                                         context={
-                                            "request": request,
-                                            "id": pk
-                                        })
+                                            "recipe": recipe})
         serializer.is_valid(raise_exception=True)
-        data = serializer.save()
-        return Response(data["message"], data["status"])
+        response = serializer.save()
+        return Response(response)
+
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk=None):
+        shopping_cart = get_object_or_404(ShopList,
+                                          user=request.user,
+                                          recipe_id=pk)
+        shopping_cart.delete()
+        return Response({'message': "Рецепт успешно удален из списка покупок"},
+                        status=204)
 
     @action(
         methods=(['GET']),
@@ -179,7 +204,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
                          .objects
                          .filter(recipe__in=shop_list)
                          .values('ingredient')
-                         .annotate(amount=Sum('amount')))
+                         .annotate(amount=Sum('amount'))
+                         .order_by('ingredient'))
         out_txt = "Список покупок\n"
         for obj in download_list:
             ingredient = Ingredient.objects.get(pk=obj['ingredient'])

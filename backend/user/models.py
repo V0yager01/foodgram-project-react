@@ -4,18 +4,27 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 
 from .validators import validate_me
 
+MAX_LENGTH = 256
+
 
 class User(AbstractUser):
     """Модель юзера."""
 
-    email = models.EmailField(max_length=256,
-                              verbose_name='email')
-    username = models.CharField(max_length=256,
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('first_name',
+                       'last_name',
+                       'username')
+
+    email = models.EmailField(max_length=MAX_LENGTH,
+                              verbose_name='email',
+                              unique=True)
+    username = models.CharField(max_length=MAX_LENGTH,
                                 unique=True,
                                 validators=[UnicodeUsernameValidator(),
                                             validate_me])
-    first_name = models.CharField(max_length=256)
-    last_name = models.CharField(max_length=256)
+    first_name = models.CharField(max_length=MAX_LENGTH)
+
+    last_name = models.CharField(max_length=MAX_LENGTH)
 
     def __str__(self) -> str:
         return f"{self.username}"

@@ -3,7 +3,7 @@ from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
 from user.models import User, Subscribe
-from post.models import (Favorite,
+from recipe.models import (Favorite,
                          Ingredient,
                          Recipe,
                          RecipeToIngredient,
@@ -123,6 +123,13 @@ class AddIngredientToRecipe(serializers.ModelSerializer):
         fields = ('id',
                   'amount')
 
+    def validate_amount(self, value):
+        if 0 < value <= 10000:
+            return value
+        raise serializers.ValidationError(
+            "Invalid 'amount' value"
+        )
+
 
 class RecipesCreateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True,
@@ -139,6 +146,13 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
             'name',
             'text',
             'cooking_time',
+        )
+
+    def validate_cooking_time(self, value):
+        if 0 < value <= 500:
+            return value
+        raise serializers.ValidationError(
+            "Invalid 'cooking_time' value"
         )
 
     def create(self, validated_data):
@@ -170,43 +184,26 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
         return super().update(instance=instance, validated_data=validated_data)
 
 
-class FavoriteSerializer(serializers.Serializer):
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = ('user',
+                  'recipe')
+
     def validate(self, data):
-        pk = self.context['pk']
-        request = self.context['request']
-        if not Recipe.objects.filter(id=pk).exists():
+        if Favorite.objects.filter(user=data['user'],
+                                   recipe=data['recipe']).exists():
             raise serializers.ValidationError({"errors":
-                                               "Recipe do not exists"})
-
-        if (request.method == 'POST'
-                and (Favorite
-                     .objects
-                     .filter(user=request.user,
-                             recipe=pk).exists())):
-            raise serializers.ValidationError({"errors":
-                                               "Recipe is favorite"})
-
-        if (request.method == 'DELETE'
-            and not Favorite.objects.filter(user=request.user,
-                                            recipe=pk).exists()):
-            raise serializers.ValidationError({"errors":
-                                               "Recipe is not favorite"})
+                                               "Рецепт уже в избранном"})
         return data
 
     def create(self, validated_data):
-        recipe = Recipe.objects.get(id=self.context['pk'])
-        if self.context['request'].method == "POST":
-            favorite = (Favorite
-                        .objects
-                        .create(user=self.context['request'].user,
-                                recipe=recipe))
-            favorite.save()
-            return {'message': BaseRecipeSerializer(recipe).data,
-                    'status': 201}
-        favorite = Favorite.objects.get(user=self.context['request'].user,
-                                        recipe=recipe).delete()
-        return {'message': "Рецепт успешно удален из избранного",
-                'status': 204}
+        user = validated_data['user']
+        recipe = validated_data['recipe']
+        FavoriteRecipe = Favorite.objects.create(user=user, recipe=recipe)
+        FavoriteRecipe.save()
+        return BaseRecipeSerializer(recipe).data
 
 
 class SubscriceListSerializer(serializers.ModelSerializer):
@@ -222,7 +219,7 @@ class SubscriceListSerializer(serializers.ModelSerializer):
                   'recipe_count')
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
+        user = self.context['user']
         return obj.author.filter(user=user).exists()
 
     def get_recipes(self, obj):
@@ -232,74 +229,58 @@ class SubscriceListSerializer(serializers.ModelSerializer):
             recipes = obj.recipes.all()
         else:
             recipes = obj.recipes.all()[:int(limit)]
-        context = {'request': request}
-        return BaseRecipeSerializer(recipes, many=True, context=context).data
+        return BaseRecipeSerializer(recipes, many=True).data
 
 
-class SubscribeSerializer(serializers.Serializer):
+class SubscribeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subscribe
+        fields = ('user', 'author')
 
     def validate(self, validated_data):
-        user = self.context.get('request').user
-        print(self.context['id'])
-        try:
-            author = User.objects.get(id=self.context['id'])
-        except Exception:
-            raise serializers.ValidationError({"errors":
-                                               "User do not exists"})
+        user = validated_data['user']
+        author = validated_data['author']
         if user == author:
+            raise serializers.ValidationError(
+                {"errors":
+                    "You can not subscribe to yourself"})
+        if Subscribe.objects.filter(user=user,
+                                    author=author).exists():
             raise serializers.ValidationError({"errors":
-                                               "You cant subscribe/unsub"})
-
-        if self.context['request'].method == "POST":
-            if Subscribe.objects.filter(user=user, author=author).exists():
-                raise serializers.ValidationError({"errors":
-                                                   "You are already subs"})
-        else:
-            if not Subscribe.objects.filter(user=user, author=author).exists():
-                raise serializers.ValidationError({"errors":
-                                                   "You are already unsub"})
+                                               "You are already subs"})
 
         return validated_data
 
     def create(self, validated_data):
-        user = self.context.get('request').user
-        author = User.objects.get(id=self.context['id'])
-        if self.context.get('request').method == 'POST':
-            Subscribe.objects.create(user=user, author=author)
-            return {"data": "Вы подписались", "status": 201}
-        sub = Subscribe.objects.get(user=user, author=author)
-        print(sub)
-        sub.delete()
-        return {"data": "Вы отписались", "status": 204}
+        request = self.context.get('request')
+        author = validated_data['author']
+        user = validated_data['user']
+        Subscribe.objects.create(user=user, author=author)
+        return SubscriceListSerializer(author, context={'user': author,
+                                                        'request':
+                                                        request}).data
 
 
-class ShopListSerializer(serializers.Serializer):
+class ShopListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShopList
+        fields = ("user", 'recipe')
 
     def validate(self, validated_data):
-        id = self.context['id']
-        user = self.context['request'].user
-        print(id)
-        if not Recipe.objects.filter(id=id).exists():
-            raise serializers.ValidationError({'errors':
-                                               'Recipe do not exists'})
-        shoplist_status = ShopList.objects.filter(user=user,
-                                                  recipe_id=id).exists()
-        if self.context['request'].method == 'POST' and shoplist_status:
+        user = validated_data['user']
+        recipe = validated_data['recipe']
+
+        if ShopList.objects.filter(user=user,
+                                   recipe=recipe).exists():
             raise serializers.ValidationError({'errors':
                                                'Рецепт уже в списке'})
-        elif (self.context['request'].method == 'DELETE'
-              and not shoplist_status):
-            raise serializers.ValidationError({'errors': 'Рецепт не в списке'})
+
         return validated_data
 
     def create(self, validated_data):
-        id = self.context['id']
-        user = self.context['request'].user
-        recipe = Recipe.objects.get(id=id)
-        print(id, user)
-        if self.context['request'].method == 'POST':
-            ShopList.objects.create(user=user, recipe_id=id)
-            return {'message': BaseRecipeSerializer(recipe).data,
-                    'status': 201}
-        ShopList.objects.get(user=user, recipe_id=id).delete()
-        return {"message": "Рецепт удален", "status": 204}
+        user = validated_data['user']
+        recipe = validated_data['recipe']
+        ShopList.objects.create(user=user, recipe=recipe)
+        return BaseRecipeSerializer(self.context.get('recipe')).data
