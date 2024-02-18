@@ -13,8 +13,7 @@ from constants.constants import (MAX_AMOUNT_VALUE,
                                  MAX_TAG_NAME_LENGTH,
                                  MAX_UNIT_LENGTH,
                                  MIN_AMOUNT_VALUE,
-                                 MIN_COOK_TIME_VALUE                   
-                                 )
+                                 MIN_COOK_TIME_VALUE)
 from user.models import User
 
 from .validators import validate_color
