@@ -3,26 +3,28 @@ from django.core.validators import (validate_slug,
                                     MinValueValidator)
 from django.db import models
 
+from constants.constants import (MAX_AMOUNT_VALUE,
+                                 MAX_COLOR_LENGTH,
+                                 MAX_COOK_TIME_VALUE,
+                                 MAX_INGREDIENT_NAME_LENGTH,
+                                 MAX_RECIPE_NAME_LENGTH,
+                                 MAX_RECIPE_TEXT_LENGTH,
+                                 MAX_SLUG_LENGTH,
+                                 MAX_TAG_NAME_LENGTH,
+                                 MAX_UNIT_LENGTH,
+                                 MIN_AMOUNT_VALUE,
+                                 MIN_COOK_TIME_VALUE                   
+                                 )
 from user.models import User
+
 from .validators import validate_color
-
-
-MAX_LENGTH = 256
-
-MAX_COLOR_LENGTH = 7
-
-MIN_VALUE = 0
-
-MAX_AMOUNT_VALUE = 10000
-
-MAX_VALUE_COOKING_TIME = 500
 
 
 class Tag(models.Model):
     """Модель тэга."""
 
     name = models.CharField(verbose_name="Name",
-                            max_length=MAX_LENGTH,
+                            max_length=MAX_TAG_NAME_LENGTH,
                             unique=True,
                             blank=False)
     color = models.CharField(verbose_name="color",
@@ -32,7 +34,7 @@ class Tag(models.Model):
                              default='#000000')
     slug = models.SlugField(unique=True,
                             blank=False,
-                            max_length=MAX_LENGTH,
+                            max_length=MAX_SLUG_LENGTH,
                             verbose_name='Slug name',
                             validators=[validate_slug])
 
@@ -47,10 +49,10 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Модель ингредиентов."""
 
-    name = models.CharField(max_length=MAX_LENGTH,
+    name = models.CharField(max_length=MAX_INGREDIENT_NAME_LENGTH,
                             blank=False,
                             verbose_name='Name')
-    measurement_unit = models.CharField(max_length=MAX_LENGTH,
+    measurement_unit = models.CharField(max_length=MAX_UNIT_LENGTH,
                                         verbose_name='Measurement unit')
 
     class Meta:
@@ -75,18 +77,18 @@ class Recipe(models.Model):
                                verbose_name='Author',
                                related_name='recipes')
     name = models.CharField(verbose_name="Название рецепта",
-                            max_length=MAX_LENGTH,
+                            max_length=MAX_RECIPE_NAME_LENGTH,
                             blank=False)
     image = models.ImageField(upload_to='recipes/',
                               blank=False,
                               verbose_name='Image')
-    text = models.CharField(max_length=MAX_LENGTH,
+    text = models.CharField(max_length=MAX_RECIPE_TEXT_LENGTH,
                             blank=False,
                             verbose_name='Text')
     cooking_time = models.PositiveSmallIntegerField(
         blank=False,
-        validators=[MinValueValidator(MIN_VALUE),
-                    MaxValueValidator(MAX_VALUE_COOKING_TIME)])
+        validators=[MinValueValidator(MIN_COOK_TIME_VALUE),
+                    MaxValueValidator(MAX_COOK_TIME_VALUE)])
     pub_date = models.DateTimeField('pub_date',
                                     auto_now_add=True)
     tags = models.ManyToManyField(Tag,
@@ -116,7 +118,7 @@ class RecipeToIngredient(models.Model):
                                               blank=False,
                                               validators=[
                                                   MinValueValidator(
-                                                      MIN_VALUE
+                                                      MIN_AMOUNT_VALUE
                                                   ),
                                                   MaxValueValidator(
                                                       MAX_AMOUNT_VALUE)]
@@ -133,46 +135,38 @@ class RecipeToIngredient(models.Model):
         verbose_name_plural = 'Ингредиенты в рецептах'
 
 
-class Favorite(models.Model):
-    """Модель избранного."""
+class AbstractUserRecipeList(models.Model):
+    """Абстракция для Favorite и ShopList."""
 
     user = models.ForeignKey(User,
-                             on_delete=models.CASCADE,
-                             related_name='user_favorite')
+                             on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe,
-                               on_delete=models.CASCADE,
-                               null=True,
-                               related_name="recipe_favorite")
+                               on_delete=models.CASCADE)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='user_recipe_fav'
-            )
-        ]
-        verbose_name = 'Избранное',
-        verbose_name_plural = 'Избранные'
-
-
-class ShopList(models.Model):
-    """Модель списка покупок."""
-
-    user = models.ForeignKey(User,
-                             on_delete=models.CASCADE,
-                             verbose_name='user_shoplist')
-    recipe = models.ForeignKey(Recipe,
-                               on_delete=models.CASCADE,
-                               null=True,
-                               verbose_name='recipe_shoplist')
-
-    class Meta:
+        abstract = True
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name="user_recipe"
             ),
         ]
+
+
+class Favorite(AbstractUserRecipeList):
+    """Модель избранного."""
+
+    class Meta:
+        default_related_name = 'recipe_favorite'
+        verbose_name = 'Избранное',
+        verbose_name_plural = 'Избранные'
+
+
+class ShopList(AbstractUserRecipeList):
+    """Модель списка покупок."""
+
+    class Meta:
+        default_related_name = 'shoplist'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
 

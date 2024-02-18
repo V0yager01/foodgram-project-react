@@ -2,6 +2,10 @@ from djoser.serializers import UserCreateSerializer
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
+from constants.constants import (MAX_AMOUNT_VALUE,
+                                 MAX_COOK_TIME_VALUE,
+                                 MIN_AMOUNT_VALUE,
+                                 MIN_COOK_TIME_VALUE)
 from user.models import User, Subscribe
 from recipe.models import (Favorite,
                            Ingredient,
@@ -124,10 +128,10 @@ class AddIngredientToRecipe(serializers.ModelSerializer):
                   'amount')
 
     def validate_amount(self, value):
-        if 0 < value <= 10000:
+        if MIN_AMOUNT_VALUE <= value <= MAX_AMOUNT_VALUE:
             return value
         raise serializers.ValidationError(
-            "Invalid 'amount' value"
+            "Недопустимое количество"
         )
 
 
@@ -149,13 +153,14 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate_cooking_time(self, value):
-        if 0 < value <= 500:
+        if MIN_COOK_TIME_VALUE <= value <= MAX_COOK_TIME_VALUE:
             return value
         raise serializers.ValidationError(
-            "Invalid 'cooking_time' value"
+            "Недопустимое время готовки"
         )
 
     def create(self, validated_data):
+        ingredient_list = []
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
@@ -163,13 +168,15 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
             amount = ingredient['amount']
             ingredient_id = (Ingredient
                              .objects.get(id=ingredient['ingredient']['id']))
-            RecipeToIngredient.objects.create(recipe=recipe,
-                                              ingredient=ingredient_id,
-                                              amount=amount)
+            ingredient_list.append(RecipeToIngredient(recipe=recipe,
+                                                      ingredient=ingredient_id,
+                                                      amount=amount))
+        RecipeToIngredient.objects.bulk_create(ingredient_list)
         recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
+        ingredient_list = []
         ingredients = validated_data.pop('ingredients', [])
         tags = validated_data.pop('tags')
         RecipeToIngredient.objects.filter(recipe=instance).delete()
@@ -177,9 +184,10 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
             amount = ingredient['amount']
             ingredient_id = (Ingredient.objects
                              .get(id=ingredient['ingredient']['id']))
-            RecipeToIngredient.objects.create(recipe=instance,
-                                              ingredient=ingredient_id,
-                                              amount=amount)
+            ingredient_list.append(RecipeToIngredient(recipe=instance,
+                                                      ingredient=ingredient_id,
+                                                      amount=amount))
+        RecipeToIngredient.objects.bulk_create(ingredient_list)
         instance.tags.set(tags)
         return super().update(instance=instance, validated_data=validated_data)
 
@@ -244,11 +252,11 @@ class SubscribeSerializer(serializers.ModelSerializer):
         if user == author:
             raise serializers.ValidationError(
                 {"errors":
-                    "You can not subscribe to yourself"})
+                    "Вы не можете подписаться на себя"})
         if Subscribe.objects.filter(user=user,
                                     author=author).exists():
             raise serializers.ValidationError({"errors":
-                                               "You are already subs"})
+                                               "Вы уже подписаны"})
 
         return validated_data
 

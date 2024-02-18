@@ -4,7 +4,8 @@ from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated)
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
 from recipe.models import (Favorite,
@@ -17,7 +18,7 @@ from user.models import User, Subscribe
 
 from .filters import IngedientNameFilter, RecipesFilters
 from .paginators import LimitPaginator
-from .permissions import PrivilegeOrReadOnly
+from .permissions import IsAuthor
 from .serializers import (ChangePasswordSerializer,
                           SignUpSerializer,
                           FavoriteSerializer,
@@ -85,9 +86,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, pk=None):
-        subscribe = get_object_or_404(Subscribe, user=request.user,
-                                      author_id=pk)
-        subscribe.delete()
+        get_object_or_404(Subscribe, user=request.user,
+                          author_id=pk).delete()
         return Response({'message': "Подписка удалена",
                          'status': 204})
 
@@ -126,7 +126,8 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = [PrivilegeOrReadOnly]
+    permission_classes = [IsAuthor,
+                          IsAuthenticatedOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete']
     filterset_class = RecipesFilters
 
@@ -161,8 +162,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
-        favorite = get_object_or_404(Favorite, user=request.user, recipe_id=pk)
-        favorite.delete()
+        get_object_or_404(Favorite, user=request.user, recipe_id=pk).delete()
         return Response({'message': "Рецепт успешно удален из избранного"},
                         status=204)
 
@@ -185,10 +185,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
-        shopping_cart = get_object_or_404(ShopList,
-                                          user=request.user,
-                                          recipe_id=pk)
-        shopping_cart.delete()
+        get_object_or_404(ShopList,
+                          user=request.user,
+                          recipe_id=pk).delete()
         return Response({'message': "Рецепт успешно удален из списка покупок"},
                         status=204)
 

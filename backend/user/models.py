@@ -2,9 +2,12 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from .validators import validate_me
+from constants.constants import (MAX_EMAIL_LENGTH,
+                                 MAX_FIRST_NAME_LENGTH,
+                                 MAX_LAST_NAME_LENGTH,
+                                 MAX_USERNAME_LENGTH)
 
-MAX_LENGTH = 256
+from .validators import validate_me
 
 
 class User(AbstractUser):
@@ -15,16 +18,20 @@ class User(AbstractUser):
                        'last_name',
                        'username')
 
-    email = models.EmailField(max_length=MAX_LENGTH,
+    email = models.EmailField(max_length=MAX_EMAIL_LENGTH,
                               verbose_name='email',
                               unique=True)
-    username = models.CharField(max_length=MAX_LENGTH,
+    username = models.CharField(max_length=MAX_USERNAME_LENGTH,
                                 unique=True,
                                 validators=[UnicodeUsernameValidator(),
                                             validate_me])
-    first_name = models.CharField(max_length=MAX_LENGTH)
+    first_name = models.CharField(max_length=MAX_FIRST_NAME_LENGTH)
 
-    last_name = models.CharField(max_length=MAX_LENGTH)
+    last_name = models.CharField(max_length=MAX_LAST_NAME_LENGTH)
+
+    class Meta:
+        verbose_name = 'Пользователь',
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self) -> str:
         return f"{self.username}"
@@ -42,6 +49,8 @@ class Subscribe(models.Model):
         return f"{self.user.username}"
 
     class Meta:
+        verbose_name = 'Подписка',
+        verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'user'],
