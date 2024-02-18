@@ -4,11 +4,11 @@ from rest_framework import serializers
 
 from user.models import User, Subscribe
 from recipe.models import (Favorite,
-                         Ingredient,
-                         Recipe,
-                         RecipeToIngredient,
-                         ShopList,
-                         Tag)
+                           Ingredient,
+                           Recipe,
+                           RecipeToIngredient,
+                           ShopList,
+                           Tag)
 
 
 class SignUpSerializer(UserCreateSerializer):
