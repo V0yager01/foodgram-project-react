@@ -131,7 +131,7 @@ class AddIngredientToRecipe(serializers.ModelSerializer):
         if MIN_AMOUNT_VALUE <= value <= MAX_AMOUNT_VALUE:
             return value
         raise serializers.ValidationError(
-            ("amount не в диапазоне " +
+            ("amount не в диапазоне "
              f"{MIN_AMOUNT_VALUE} <= amount <= {MAX_AMOUNT_VALUE}")
         )
 
@@ -157,7 +157,7 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
         if MIN_COOK_TIME_VALUE <= value <= MAX_COOK_TIME_VALUE:
             return value
         raise serializers.ValidationError(
-            ("Cooking_time не в диапазоне " +
+            ("Cooking_time не в диапазоне "
              f"{MIN_AMOUNT_VALUE} <= cooking_time <= {MAX_AMOUNT_VALUE}")
         )
 
