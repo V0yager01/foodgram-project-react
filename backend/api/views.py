@@ -18,7 +18,7 @@ from user.models import User, Subscribe
 
 from .filters import IngedientNameFilter, RecipesFilters
 from .paginators import LimitPaginator
-from .permissions import IsAuthor
+from .permissions import AuthorOrInSafeMethodsPermission
 from .serializers import (ChangePasswordSerializer,
                           SignUpSerializer,
                           FavoriteSerializer,
@@ -126,7 +126,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthor,
+    permission_classes = [AuthorOrInSafeMethodsPermission,
                           IsAuthenticatedOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete']
     filterset_class = RecipesFilters

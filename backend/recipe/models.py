@@ -144,30 +144,36 @@ class AbstractUserRecipeList(models.Model):
 
     class Meta:
         abstract = True
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name="user_recipe"
-            ),
-        ]
 
 
 class Favorite(AbstractUserRecipeList):
     """Модель избранного."""
 
-    class Meta:
+    class Meta(AbstractUserRecipeList.Meta):
         default_related_name = 'recipe_favorite'
         verbose_name = 'Избранное',
         verbose_name_plural = 'Избранные'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name="user_recipe_favorite"
+            ),
+        ]
 
 
 class ShopList(AbstractUserRecipeList):
     """Модель списка покупок."""
 
-    class Meta:
+    class Meta(AbstractUserRecipeList.Meta):
         default_related_name = 'shoplist'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name="user_recipe_shoplist"
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.user} shoplist"
