@@ -22,11 +22,11 @@ from .validators import validate_color
 class Tag(models.Model):
     """Модель тэга."""
 
-    name = models.CharField(verbose_name="Name",
+    name = models.CharField(verbose_name='Name',
                             max_length=MAX_TAG_NAME_LENGTH,
                             unique=True,
                             blank=False)
-    color = models.CharField(verbose_name="color",
+    color = models.CharField(verbose_name='color',
                              max_length=MAX_COLOR_LENGTH,
                              blank=False,
                              validators=[validate_color],
@@ -42,7 +42,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Тэги'
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        return f'{self.name}'
 
 
 class Ingredient(models.Model):
@@ -65,7 +65,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self) -> str:
-        return f"{self.name} {self.measurement_unit}"
+        return f'{self.name} {self.measurement_unit}'
 
 
 class Recipe(models.Model):
@@ -75,7 +75,7 @@ class Recipe(models.Model):
                                on_delete=models.CASCADE,
                                verbose_name='Author',
                                related_name='recipes')
-    name = models.CharField(verbose_name="Название рецепта",
+    name = models.CharField(verbose_name='Название рецепта',
                             max_length=MAX_RECIPE_NAME_LENGTH,
                             blank=False)
     image = models.ImageField(upload_to='recipes/',
@@ -98,7 +98,7 @@ class Recipe(models.Model):
                                          related_name='recipes')
 
     def __str__(self) -> str:
-        return f"{self.name} - {self.author}"
+        return f'{self.name} - {self.author}'
 
     class Meta:
         ordering = ('-pub_date',)
@@ -156,7 +156,7 @@ class Favorite(AbstractUserRecipeList):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name="user_recipe_favorite"
+                name='user_recipe_favorite'
             ),
         ]
 
@@ -171,9 +171,9 @@ class ShopList(AbstractUserRecipeList):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name="user_recipe_shoplist"
+                name='user_recipe_shoplist'
             ),
         ]
 
     def __str__(self) -> str:
-        return f"{self.user} shoplist"
+        return f'{self.user} shoplist'

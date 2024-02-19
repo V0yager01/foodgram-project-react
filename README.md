@@ -1,9 +1,15 @@
 # FoodGram
 ## Описание
-<a href='https://myfoodgramproject.ddns.net'> FoodGram </a> проект, позволяющий пользователя находить и делиться разнообразными рецептами блюд. 
+[FoodGram](https://myfoodgramproject.ddns.net) проект, позволяющий пользователя находить и делиться разнообразными рецептами блюд. 
 
 ## Технологии:
-HTML, CSS, JavaScript, Python, Django, React, Docker.
+* HTML
+* CSS
+* JavaScript
+* Python
+* Django
+* React
+* Docker.
 
 ## Запуcк
 Для запуска проекта воспользуемся Linux(Ubuntu)
@@ -54,9 +60,11 @@ sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/col
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py load_csv
 ```
 ## Конфигурационные файлы
-Во время разработки рекомендуется использовать <strong>docker-compose.yml</strong>, где образы билдятся при каждом запуске.
-В продакшене использовать <strong>docker-compose.production.yml</strong> для получения готовых образов с Docker Hub.
+Во время разработки рекомендуется использовать **docker-compose.yml**, где образы билдятся при каждом запуске.
+В продакшене использовать **docker-compose.production.yml** для получения готовых образов с Docker Hub.
 
+## Статус
+![Workflow Status](https://github.com/ponyk1ller/kittygram_final/actions/workflows/main.yml/badge.svg)
 
 
 ## Автор

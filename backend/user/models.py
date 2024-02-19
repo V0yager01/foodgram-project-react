@@ -34,7 +34,7 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
     def __str__(self) -> str:
-        return f"{self.username}"
+        return f'{self.username}'
 
 
 class Subscribe(models.Model):
@@ -46,7 +46,7 @@ class Subscribe(models.Model):
                                related_name='author')
 
     def __str__(self) -> str:
-        return f"{self.user.username}"
+        return f'{self.user.username}'
 
     class Meta:
         verbose_name = 'Подписка',

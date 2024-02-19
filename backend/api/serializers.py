@@ -47,7 +47,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = "__all__"
+        fields = '__all__'
         model = Tag
 
 
@@ -77,7 +77,7 @@ class RecipeToIngredientSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit')
 
     class Meta:
-        fields = ("id", "name", "measurement_unit", "amount")
+        fields = ('id', 'name', 'measurement_unit', 'amount')
         model = RecipeToIngredient
 
 
@@ -104,15 +104,15 @@ class RecipeGetListSerializer(serializers.ModelSerializer):
                   'is_in_shopping_cart')
 
     def get_is_favorited(self, obj):
-        if (self.context["request"].user.is_authenticated
-            and Favorite.objects.filter(user=self.context["request"].user,
+        if (self.context['request'].user.is_authenticated
+            and Favorite.objects.filter(user=self.context['request'].user,
                                         recipe=obj).exists()):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        if (self.context["request"].user.is_authenticated
-            and ShopList.objects.filter(user=self.context["request"].user,
+        if (self.context['request'].user.is_authenticated
+            and ShopList.objects.filter(user=self.context['request'].user,
                                         recipe=obj).exists()):
             return True
         return False
@@ -131,8 +131,8 @@ class AddIngredientToRecipe(serializers.ModelSerializer):
         if MIN_AMOUNT_VALUE <= value <= MAX_AMOUNT_VALUE:
             return value
         raise serializers.ValidationError(
-            ("amount не в диапазоне "
-             f"{MIN_AMOUNT_VALUE} <= amount <= {MAX_AMOUNT_VALUE}")
+            ('amount не в диапазоне '
+             f'{MIN_AMOUNT_VALUE} <= amount <= {MAX_AMOUNT_VALUE}')
         )
 
 
@@ -157,8 +157,8 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
         if MIN_COOK_TIME_VALUE <= value <= MAX_COOK_TIME_VALUE:
             return value
         raise serializers.ValidationError(
-            ("Cooking_time не в диапазоне "
-             f"{MIN_AMOUNT_VALUE} <= cooking_time <= {MAX_AMOUNT_VALUE}")
+            ('cooking_time не в диапазоне '
+             f'{MIN_AMOUNT_VALUE} <= cooking_time <= {MAX_AMOUNT_VALUE}')
         )
 
     def create(self, validated_data):
@@ -204,8 +204,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if Favorite.objects.filter(user=data['user'],
                                    recipe=data['recipe']).exists():
-            raise serializers.ValidationError({"errors":
-                                               "Рецепт уже в избранном"})
+            raise serializers.ValidationError({'errors':
+                                               'Рецепт уже в избранном'})
         return data
 
     def create(self, validated_data):
@@ -253,12 +253,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
         author = validated_data['author']
         if user == author:
             raise serializers.ValidationError(
-                {"errors":
-                    "Вы не можете подписаться на себя"})
+                {'errors':
+                    'Вы не можете подписаться на себя'})
         if Subscribe.objects.filter(user=user,
                                     author=author).exists():
-            raise serializers.ValidationError({"errors":
-                                               "Вы уже подписаны"})
+            raise serializers.ValidationError({'errors':
+                                               'Вы уже подписаны'})
 
         return validated_data
 
@@ -276,7 +276,7 @@ class ShopListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShopList
-        fields = ("user", 'recipe')
+        fields = ('user', 'recipe')
 
     def validate(self, validated_data):
         user = validated_data['user']

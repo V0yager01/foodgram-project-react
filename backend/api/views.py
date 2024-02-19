@@ -18,7 +18,7 @@ from user.models import User, Subscribe
 
 from .filters import IngedientNameFilter, RecipesFilters
 from .paginators import LimitPaginator
-from .permissions import IsAuthorOrInSafeMethodsPermission
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (ChangePasswordSerializer,
                           SignUpSerializer,
                           FavoriteSerializer,
@@ -88,7 +88,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def delete_subscribe(self, request, pk=None):
         get_object_or_404(Subscribe, user=request.user,
                           author_id=pk).delete()
-        return Response({'message': "Подписка удалена",
+        return Response({'message': 'Подписка удалена',
                          'status': 204})
 
     @action(
@@ -126,7 +126,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthorOrInSafeMethodsPermission,
+    permission_classes = [IsAuthorOrReadOnly,
                           IsAuthenticatedOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete']
     filterset_class = RecipesFilters
@@ -163,7 +163,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
         get_object_or_404(Favorite, user=request.user, recipe_id=pk).delete()
-        return Response({'message': "Рецепт успешно удален из избранного"},
+        return Response({'message': 'Рецепт успешно удален из избранного'},
                         status=204)
 
     @action(
@@ -178,7 +178,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 'recipe': recipe.id}
         serializer = ShopListSerializer(data=data,
                                         context={
-                                            "recipe": recipe})
+                                            'recipe': recipe})
         serializer.is_valid(raise_exception=True)
         response = serializer.save()
         return Response(response)
@@ -188,7 +188,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         get_object_or_404(ShopList,
                           user=request.user,
                           recipe_id=pk).delete()
-        return Response({'message': "Рецепт успешно удален из списка покупок"},
+        return Response({'message': 'Рецепт успешно удален из списка покупок'},
                         status=204)
 
     @action(
@@ -205,13 +205,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
                          .values('ingredient')
                          .annotate(amount=Sum('amount'))
                          .order_by('ingredient'))
-        out_txt = "Список покупок\n"
+        out_txt = 'Список покупок\n'
         for obj in download_list:
             ingredient = Ingredient.objects.get(pk=obj['ingredient'])
             amount = obj['amount']
-            out_txt = (out_txt + f"{ingredient.name} "
-                       + f"{amount} - "
-                       + f"({ingredient.measurement_unit})\n")
+            out_txt = (out_txt + f'{ingredient.name} '
+                       + f'{amount} - '
+                       + f'({ingredient.measurement_unit})\n')
         response = HttpResponse(out_txt, content_type='text/plain')
         response['Content-Disposition'] = ('attachment; '
                                            + 'filename="IngredientList.txt"')
