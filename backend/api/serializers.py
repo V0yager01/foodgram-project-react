@@ -229,7 +229,7 @@ class SubscriceListSerializer(serializers.ModelSerializer):
                   'recipe_count')
 
     def get_is_subscribed(self, obj):
-        user = self.context['user']
+        user = self.context.get('user')
         return obj.author.filter(user=user).exists()
 
     def get_recipes(self, obj):
