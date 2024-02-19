@@ -130,6 +130,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                           IsAuthenticatedOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete']
     filterset_class = RecipesFilters
+    pagination_class = LimitPaginator
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
